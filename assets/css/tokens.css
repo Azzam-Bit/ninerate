@@ -1,0 +1,93 @@
+/* =========================================================
+   NineRate — Design Tokens
+   Semua warna, radius, spacing, dan durasi transition
+   didefinisikan sekali di sini.
+   ========================================================= */
+
+:root {
+  /* --- Brand colors --- */
+  --brand-blue: #2596be;
+  --brand-yellow: #f6f023;
+  --brand-ivory: #faf9f6;
+
+  /* --- Supporting UI colors --- */
+  --primary: #1d7898;
+  --primary-hover: #185f78;
+  --surface: #ffffff;
+  --text: #203747;
+  /* #5F6F77 dipilih pada audit tahap 5 agar teks muted mencapai WCAG AA (>= 4.5:1)
+     pada seluruh latar yang dipakai: ivory 4.95:1, putih 5.22:1, dan
+     surface lembut (neutral/primary/brand soft) 4.57-4.59:1. */
+  --text-muted: #5f6f77;
+  --border: #e5e2db;
+
+  /* --- Derived / semantic colors --- */
+  --primary-soft: #e8f2f7;
+  --primary-soft-strong: #d3e8f1;
+  --brand-blue-soft: #e6f2f8;
+  --accent-ink: #5c4a00; /* teks gelap yang aman di atas kuning */
+  --danger: #b3261e;
+  --danger-soft: #fdeceb;
+  --success: #1c7a4d;
+  --success-soft: #e6f4ec;
+  --warning: #8a6100;
+  --warning-soft: #fdf3d7;
+  --neutral-soft: #f1f0ec;
+
+  /* --- Typography --- */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+  --leading-tight: 1.25;
+  --leading-normal: 1.6;
+
+  /* --- Spacing (kelipatan 4px) --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* --- Radius --- */
+  --radius-control: 10px;
+  --radius-card: 16px;
+  --radius-pill: 999px;
+
+  /* --- Border & shadow --- */
+  --border-soft: 1px solid var(--border);
+  --shadow-soft: 0 1px 2px rgba(32, 55, 71, 0.04), 0 6px 18px rgba(32, 55, 71, 0.05);
+  --shadow-raise: 0 2px 4px rgba(32, 55, 71, 0.05), 0 12px 28px rgba(32, 55, 71, 0.08);
+  --shadow-overlay: 0 16px 40px rgba(32, 55, 71, 0.18);
+
+  /* --- Motion --- */
+  --transition-fast: 150ms ease;
+  --transition-base: 180ms ease;
+
+  /* --- Layout --- */
+  --sidebar-width: 248px;
+  --header-height: 64px;
+  --content-max: 1120px;
+  --z-header: 40;
+  --z-sidebar: 60;
+  --z-backdrop: 55;
+  --z-toast: 80;
+  --z-modal: 90;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 1ms linear;
+    --transition-base: 1ms linear;
+  }
+}
