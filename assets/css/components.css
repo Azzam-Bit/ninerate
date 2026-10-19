@@ -744,6 +744,14 @@
   color: var(--brand-blue);
 }
 
+.empty-state__title {
+  font-size: var(--text-md);
+}
+
+.empty-state__action {
+  margin-top: var(--space-1);
+}
+
 .placeholder {
   display: flex;
   flex-direction: column;

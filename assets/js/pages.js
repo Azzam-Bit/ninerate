@@ -387,6 +387,7 @@ export function renderAdminDashboard(ctx) {
     in_review: reports.filter((item) => item.status === 'in_review').length,
     resolved: reports.filter((item) => item.status === 'resolved').length,
   };
+  const unresolvedReports = reportByStatus.open + reportByStatus.in_review;
 
   return page([
     pageIntro({
@@ -394,6 +395,37 @@ export function renderAdminDashboard(ctx) {
       description:
         'Ringkasan operasional NineRate. Seluruh angka dihitung dari record yang tersimpan di LocalStorage browser ini.',
     }),
+
+    el('div', { className: 'section-gap-sm' }, [
+      card([
+        cardHead(
+          'Perlu ditindaklanjuti',
+          byStatus.pending + unresolvedReports > 0
+            ? `${byStatus.pending + unresolvedReports} pekerjaan membutuhkan perhatian admin.`
+            : 'Tidak ada antrean moderasi atau laporan aktif saat ini.',
+          byStatus.pending + unresolvedReports > 0 ? badge('Perlu perhatian', 'pending') : badge('Terkendali', 'approved'),
+        ),
+        byStatus.pending + unresolvedReports > 0
+          ? el('div', { className: 'button-row' }, [
+              byStatus.pending > 0
+                ? button({
+                    label: `Tinjau ${byStatus.pending} feedback pending`,
+                    iconName: 'shield',
+                    onClick: () => ctx.navigate('#/admin/moderation'),
+                  })
+                : null,
+              unresolvedReports > 0
+                ? button({
+                    label: `Tinjau ${unresolvedReports} laporan aktif`,
+                    variant: 'secondary',
+                    iconName: 'flag',
+                    onClick: () => ctx.navigate('#/admin/reports'),
+                  })
+                : null,
+            ])
+          : alert('Semua antrean yang perlu tindakan sudah selesai ditinjau.', 'success', 'check-circle'),
+      ], { compact: true }),
+    ]),
 
     el('div', { className: 'section-head' }, [el('h3', { text: 'Ringkasan akun' })]),
     el('div', { className: 'card-grid' }, [
@@ -456,7 +488,7 @@ export function renderAdminDashboard(ctx) {
         button({ label: 'Buka moderasi', iconName: 'shield', onClick: () => ctx.navigate('#/admin/moderation') }),
       ], { compact: true }),
       card([
-        cardHead('Laporan konten', `${reportByStatus.open + reportByStatus.in_review} laporan belum selesai.`),
+        cardHead('Laporan konten', `${unresolvedReports} laporan belum selesai.`),
         button({ label: 'Buka laporan', iconName: 'flag', onClick: () => ctx.navigate('#/admin/reports') }),
       ], { compact: true }),
       card([
@@ -1726,7 +1758,15 @@ export function renderTeacherDashboard(ctx) {
             : 'Hanya feedback approved yang ditampilkan.',
         ),
         approved.length === 0
-          ? emptyState('Belum ada penilaian.', 'star')
+          ? emptyState('Umpan balik yang disetujui akan muncul di sini setelah proses moderasi selesai.', 'star', {
+              title: 'Belum ada penilaian — ini wajar',
+              actionNode: button({
+                label: 'Buka profil saya',
+                variant: 'secondary',
+                size: 'sm',
+                onClick: () => ctx.navigate('#/teacher/profile'),
+              }),
+            })
           : el(
               'div',
               { className: 'record-list' },
@@ -2101,6 +2141,13 @@ export function renderStudentDashboard(ctx) {
       description:
         'Kelola umpan balik guru Anda di SMKN 9 Kota Bekasi. Semua angka di halaman ini berasal dari data lokal browser ini.',
     }),
+    el('div', { className: 'section-gap-sm' }, [
+      alert(
+        'Gunakan feedback untuk membantu guru berkembang: tulis pengalaman yang spesifik, sopan, dan dapat ditindaklanjuti.',
+        'info',
+        'info',
+      ),
+    ]),
     el('div', { className: 'card-grid' }, [
       statCard({
         label: 'Guru aktif',
@@ -2110,7 +2157,7 @@ export function renderStudentDashboard(ctx) {
       statCard({
         label: 'Feedback terkirim',
         value: mine.length,
-        meta: `${searchable.length} sedang tervalidasi atau tervisibil`,
+        meta: `${searchable.length} sedang diproses atau sudah tampil`,
       }),
       statCard({
         label: 'Menunggu moderasi',
@@ -2201,7 +2248,12 @@ export function renderStudentTeachers(ctx) {
     resultList.replaceChildren(
       ...(filtered.length
         ? filtered.map((teacher) => teacherCard(ctx, teacher))
-        : [emptyState('Tidak ada guru yang cocok dengan pencarian atau filter tersebut.', 'users')]),
+        : [
+            emptyState('Tidak ada guru yang cocok dengan pencarian atau filter tersebut.', 'users', {
+              title: 'Belum ada hasil',
+              actionNode: button({ label: 'Reset filter', variant: 'secondary', size: 'sm', onClick: resetFilters }),
+            }),
+          ]),
     );
   };
 
@@ -2503,6 +2555,19 @@ export function renderStudentTeacherFeedbackForm(ctx) {
 
   const errors = { rating: '', kritik: '', saran: '' };
 
+  const ratingField = el('div', { className: 'field' }, [
+    el('span', { className: 'field__label', text: 'Rating keseluruhan (1-5)' }),
+    ratingGroupHolder,
+    ratingErrorHolder,
+    existing && existing.status === 'approved'
+      ? el('p', {
+          className: 'field__hint',
+          text:
+            'Feedback yang disetujui akan ditarik dari profil publik dan perhitungan rating sampai disetujui kembali.',
+        })
+      : null,
+  ]);
+
   const kritikField = field({
     label: `Kritik (maks. ${LIMITS.kritik} karakter)`,
     input: kritikInput,
@@ -2518,9 +2583,23 @@ export function renderStudentTeacherFeedbackForm(ctx) {
   const applyErrors = () => {
     ratingErrorHolder.replaceChildren(
       errors.rating
-        ? el('p', { className: 'field__error', attrs: { role: 'alert' }, text: errors.rating })
+        ? el('p', {
+            className: 'field__error',
+            attrs: { id: 'feedback-rating-error', role: 'alert' },
+            text: errors.rating,
+          })
         : el('p', { className: 'field__hint', text: 'Rating wajib dipilih.' }),
     );
+    ratingField.className = errors.rating ? 'field field--invalid' : 'field';
+    const ratingOptions = ratingGroupHolder.querySelector('.rating-options');
+    if (ratingOptions) {
+      ratingOptions.setAttribute('aria-invalid', errors.rating ? 'true' : 'false');
+      if (errors.rating) {
+        ratingOptions.setAttribute('aria-describedby', 'feedback-rating-error');
+      } else {
+        ratingOptions.removeAttribute('aria-describedby');
+      }
+    }
     kritikField.className = errors.kritik ? 'field field--invalid' : 'field';
     kritikField.replaceChildren(
       el('label', {
@@ -2530,7 +2609,11 @@ export function renderStudentTeacherFeedbackForm(ctx) {
       }),
       kritikInput,
       errors.kritik
-        ? el('p', { className: 'field__error', attrs: { role: 'alert' }, text: errors.kritik })
+        ? el('p', {
+            className: 'field__error',
+            attrs: { id: `${kritikInput.id}-error`, role: 'alert' },
+            text: errors.kritik,
+          })
         : charCounter(kritikInput, LIMITS.kritik),
     );
     saranField.className = errors.saran ? 'field field--invalid' : 'field';
@@ -2542,11 +2625,25 @@ export function renderStudentTeacherFeedbackForm(ctx) {
       }),
       saranInput,
       errors.saran
-        ? el('p', { className: 'field__error', attrs: { role: 'alert' }, text: errors.saran })
+        ? el('p', {
+            className: 'field__error',
+            attrs: { id: `${saranInput.id}-error`, role: 'alert' },
+            text: errors.saran,
+          })
         : charCounter(saranInput, LIMITS.saran),
     );
     kritikInput.setAttribute('aria-invalid', errors.kritik ? 'true' : 'false');
     saranInput.setAttribute('aria-invalid', errors.saran ? 'true' : 'false');
+    if (errors.kritik) {
+      kritikInput.setAttribute('aria-describedby', `${kritikInput.id}-error`);
+    } else {
+      kritikInput.removeAttribute('aria-describedby');
+    }
+    if (errors.saran) {
+      saranInput.setAttribute('aria-describedby', `${saranInput.id}-error`);
+    } else {
+      saranInput.removeAttribute('aria-describedby');
+    }
   };
 
   const formErrorBox = el('div', {});
@@ -2574,6 +2671,12 @@ export function renderStudentTeacherFeedbackForm(ctx) {
     if (!check.valid) {
       /* Input tidak dikosongkan; hanya pesan error yang diperbarui. */
       formErrorBox.append(alert('Periksa kembali isian yang ditandai merah.', 'error', 'alert'));
+      const firstInvalid = errors.rating
+        ? ratingGroupHolder.querySelector('input[type="radio"]')
+        : errors.kritik
+          ? kritikInput
+          : saranInput;
+      if (firstInvalid && typeof firstInvalid.focus === 'function') firstInvalid.focus();
       return;
     }
 
@@ -2651,18 +2754,7 @@ export function renderStudentTeacherFeedbackForm(ctx) {
         ),
         el('div', { className: 'form-stack' }, [
           formErrorBox,
-          el('div', { className: existing && existing.status === 'approved' ? 'field field--invalid' : 'field' }, [
-            el('span', { className: 'field__label', text: 'Rating keseluruhan (1-5)' }),
-            ratingGroupHolder,
-            ratingErrorHolder,
-            existing && existing.status === 'approved'
-              ? el('p', {
-                  className: 'field__hint',
-                  text:
-                    'Feedback yang disetujui akan ditarik dari profil publik dan perhitungan rating sampai disetujui kembali.',
-                })
-              : null,
-          ]),
+          ratingField,
           kritikField,
           saranField,
           submitButton,
@@ -2702,7 +2794,14 @@ export function renderStudentMyFeedback(ctx) {
     }),
 
     mine.length === 0
-      ? emptyState('Anda belum mengirim umpan balik. Mulai dari daftar guru.')
+      ? emptyState('Mulai dari direktori untuk memilih guru dan menulis feedback yang konstruktif.', 'inbox', {
+          title: 'Belum ada feedback',
+          actionNode: button({
+            label: 'Buka daftar guru',
+            iconName: 'book-open',
+            onClick: () => ctx.navigate('#/student/teachers'),
+          }),
+        })
       : el('div', { className: 'record-list' }, mine.map((item) => {
           const teacher = resolveRateableTeacher(item.teacherId);
           const teacherName = teacher ? teacher.fullName : 'Guru tidak tersedia';

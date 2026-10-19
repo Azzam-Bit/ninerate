@@ -397,10 +397,12 @@ export function placeholderCard({ title, description, items = [], stage = 'Tahap
   );
 }
 
-export function emptyState(message, iconName = 'inbox') {
+export function emptyState(message, iconName = 'inbox', { title = '', actionNode = null } = {}) {
   return el('div', { className: 'empty-state' }, [
     el('span', { className: 'empty-state__icon' }, [icon(iconName, 24)]),
+    title ? el('h3', { className: 'empty-state__title', text: title }) : null,
     el('p', { text: message }),
+    actionNode ? el('div', { className: 'empty-state__action' }, [actionNode]) : null,
   ]);
 }
 
@@ -507,12 +509,36 @@ export function openModal({
   };
 
   const onKeyDown = (event) => {
-    if (event.key === 'Escape') close();
+    if (event.key === 'Escape') {
+      close();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+
+    const focusable = Array.from(
+      modal.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    );
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
   };
 
-  const modal = el('div', { className: 'modal', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-label': title } }, [
+  const modal = el('div', { className: 'modal', attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'modal-title' } }, [
     el('div', { className: 'modal__head' }, [
-      el('h2', { className: 'modal__title', text: title }),
+      el('h2', { className: 'modal__title', id: 'modal-title', text: title }),
       el('button', {
         className: 'modal__close',
         type: 'button',

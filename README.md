@@ -772,3 +772,32 @@ SEO **1.00**, tanpa kegagalan yang tersisa.
   data locale.
 - Beban data nyata (hundreds of feedback) - optimasi daftar panjang dan pagination
   memang di luar scope tahap ini.
+
+### 11.7 Product Experience Upgrade 01 (19 Oktober 2026)
+
+Penyempurnaan ini mempertahankan HTML, CSS, Vanilla JavaScript ES Modules, hash routing,
+LocalStorage, kontrak domain, dan seluruh token warna yang ada. Tidak ada dependency, seed,
+versi skema, atau aturan akses yang diubah.
+
+- **Dashboard berdasarkan tindakan:** Dashboard Admin kini memprioritaskan feedback Pending
+  serta laporan Open/In Review dalam satu ringkasan dengan pintasan ke antrean yang tepat.
+  Semua jumlah tetap dihitung langsung dari record saat halaman dirender. Dashboard Murid
+  kini menjelaskan tujuan feedback konstruktif di dekat tindakan utama.
+- **Empty state yang mengarahkan:** Komponen `emptyState()` mendukung judul dan satu aksi
+  lanjutan. Dipakai pada hasil direktori kosong (reset filter), Feedback Saya yang kosong
+  (buka daftar guru), dan dashboard Guru tanpa feedback approved (buka profil), dengan
+  bahasa netral yang tidak memberi kesan negatif kepada guru.
+- **Aksesibilitas dan formulir:** Header aplikasi tidak lagi membuat H1 kedua sehingga setiap
+  rute aplikasi memiliki satu H1 dari `pageIntro()`. Modal kini menjaga fokus Tab di dalam
+  dialog serta mengembalikan fokus ke pemicu saat ditutup. Form feedback menandai radiogroup
+  rating dengan `aria-invalid`/`aria-describedby`, tidak memakai status approved sebagai
+  tampilan invalid, dan memindahkan fokus ke kontrol pertama yang gagal saat validasi gagal.
+- **Navigasi mobile:** Saat menu mobile dibuka, fokus berpindah ke tautan navigasi pertama;
+  saat ditutup dari menu, fokus kembali ke tombol pembukanya.
+
+Pemeriksaan setelah perubahan: `node --check` dijalankan pada seluruh 9 modul JavaScript dan
+`git diff --check` lulus. Audit statik kembali memastikan `storage.js` tetap satu-satunya
+modul yang mengakses `localStorage`, `innerHTML` tetap terbatas pada SVG ikon statis, dan H1
+aplikasi hanya dirender oleh `pageIntro()` (selain headline login). Browser automation tidak
+tersedia pada lingkungan ini, sehingga rendering desktop/tablet/mobile, interaksi fokus di
+browser nyata, console, dan regresi end-to-end belum diklaim terverifikasi pada upgrade ini.

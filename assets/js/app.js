@@ -110,7 +110,8 @@ function renderSidebar(user, activeRouteId) {
 /* ------------------------------------------------------------------ */
 
 function renderHeader(user, route) {
-  const titleNode = el('h1', { className: 'app-header__title', text: route.title });
+  /* H1 tunggal berada pada pageIntro() agar hierarki tiap rute tetap jelas. */
+  const titleNode = el('p', { className: 'app-header__title', text: route.title });
   const subtitleNode = el('p', { className: 'app-header__subtitle', text: route.subtitle || 'NineRate' });
 
   const identity = el('div', { className: 'header-identity' }, [
@@ -145,6 +146,8 @@ function renderHeader(user, route) {
 /* Mobile menu                                                         */
 /* ------------------------------------------------------------------ */
 
+let menuFocusOrigin = null;
+
 function toggleMobileMenu(force) {
   const sidebar = document.getElementById('sidebar');
   const backdrop = document.getElementById('nav-backdrop');
@@ -155,6 +158,16 @@ function toggleMobileMenu(force) {
   sidebar.classList.toggle('is-open', shouldOpen);
   backdrop.classList.toggle('is-visible', shouldOpen);
   if (toggle) toggle.setAttribute('aria-expanded', String(shouldOpen));
+
+  if (shouldOpen) {
+    menuFocusOrigin = toggle || document.activeElement;
+    window.requestAnimationFrame(() => {
+      const firstNavItem = sidebar.querySelector('.nav-item');
+      if (firstNavItem) firstNavItem.focus();
+    });
+  } else if (menuFocusOrigin && sidebar.contains(document.activeElement)) {
+    menuFocusOrigin.focus();
+  }
 }
 
 function closeMobileMenu() {
